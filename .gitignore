@@ -53,3 +53,6 @@ out/
 # OS
 .DS_Store
 Thumbs.db
+
+# Sync script
+sync-upstream.ps1
