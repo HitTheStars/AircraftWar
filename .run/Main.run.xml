@@ -1,9 +1,14 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Main" type="Application" factoryName="Application" nameIsGenerated="true">
-    <option name="ALTERNATIVE_JRE_PATH" value="25" />
+    <option name="ALTERNATIVE_JRE_PATH" value="openjdk-26" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <option name="MAIN_CLASS_NAME" value="edu.hitsz.application.Main" />
-    <module name="AircraftWar-base1.0" />
+    <option name="VM_PARAMETERS" value="-Dsun.java2d.opengl=false -Dsun.java2d.xrender=false -Dawt.useSystemAAFontSettings=on" />
+    <module name="AircraftWar-base" />
+    <envs>
+      <env name="GDK_BACKEND" value="x11" />
+      <env name="_JAVA_AWT_WM_NONREPARENTING" value="1" />
+    </envs>
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="edu.hitsz.application.*" />
