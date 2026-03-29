@@ -14,7 +14,7 @@ import java.util.concurrent.*;
 
 /**
  * 游戏主面板，游戏启动
- * @author hitsz
+ * @author hitsz test
  */
 public class Game extends JPanel {
 
