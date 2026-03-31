@@ -13,7 +13,7 @@ public class BulletProp extends AbstractProp {
 
     @Override
     public void effect(Object aircraft) {
-        // 增加子弹威力
+        System.out.println("FireSupply active!");
     }
 
 }

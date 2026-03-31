@@ -13,7 +13,10 @@ public class BloodProp extends AbstractProp {
 
     @Override
     public void effect(Object aircraft) {
-        // 恢复30点生命值
+        if (aircraft instanceof edu.hitsz.aircraft.HeroAircraft) {
+            edu.hitsz.aircraft.HeroAircraft hero = (edu.hitsz.aircraft.HeroAircraft) aircraft;
+            hero.increaseHp(30);
+        }
     }
 
 }
