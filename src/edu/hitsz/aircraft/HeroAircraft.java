@@ -25,22 +25,17 @@ public class HeroAircraft extends AbstractAircraft {
     public HeroAircraft(int locationX, int locationY, int speedX, int speedY, int hp) {
         super(locationX, locationY, speedX, speedY, hp);
     }
-    public static HeroAircraft getHeroAircraft() {
+    //单例模式创建英雄机
+    public static HeroAircraft getHeroAircraft(int locationX, int locationY, int speedX, int speedY, int hp) {
         if (heroAircraft == null) {
             synchronized (HeroAircraft.class) {
                 if (heroAircraft == null) {
-                    heroAircraft = new HeroAircraft();
+                    heroAircraft = new HeroAircraft(locationX,locationY,speedX,speedY,hp);
                 }
             }
         }
         return heroAircraft;
     }
-}
-public class HeroAircraft extends AbstractAircraft {
-
-
-
-
 
     @Override
     public void forward() {
@@ -69,3 +64,12 @@ public class HeroAircraft extends AbstractAircraft {
     }
 
 }
+
+
+
+
+
+
+
+
+
