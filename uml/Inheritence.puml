@@ -2,8 +2,7 @@
 'https://plantuml.com/class-diagram
 
 '=================== 飞行物体基类 ===================
-abstract class AbstractFlyingObject
-{
+abstract class AbstractFlyingObject {
     # locationX:int
     # locationY:int
     # speedX:int
@@ -18,6 +17,7 @@ abstract class AbstractFlyingObject
     + crash(AbstractFlyingObject flyingObject):boolean
     + getLocationX():int
     + getLocationY():int
+    + setLocation(double locationX, double locationY):void
     + getSpeedY():int
     + getImage():BufferedImage
     + getWidth():int
@@ -27,33 +27,36 @@ abstract class AbstractFlyingObject
 }
 
 '=================== 飞机基类 ===================
-abstract class AbstractAircraft
-{
+abstract class AbstractAircraft {
     # maxHp:int
     # hp:int
+
     + AbstractAircraft(int locationX, int locationY, int speedX, int speedY, int hp)
     + decreaseHp(int decrease):void
     + getHp():int
     + {abstract} shoot():List<BaseBullet>
 }
 
+'=================== 敌机基类 ===================
+abstract class AbstractEnemy {
+    + AbstractEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
+    + {abstract} shoot():List<BaseBullet>
+}
+
 '=================== 子弹基类 ===================
-abstract class BaseBullet
-{
+abstract class BaseBullet {
     - power:int
+
     + BaseBullet(int locationX, int locationY, int speedX, int speedY, int power)
     + forward():void
     + getPower():int
 }
 
 '=================== 道具基类 ===================
-abstract class AbstractProp
-{
-    # possibility:float
-    + AbstractProp(int locationX, int locationY, int speedX, int speedY, int power)
+abstract class AbstractProp {
+    + AbstractProp(int locationX, int locationY, int speedX, int speedY)
     + forward():void
-    + getPossibility():float
-    + effect():void
+    + {abstract} effect(Object aircraft):void
 }
 
 '=================== 英雄机（单例模式） ===================
@@ -62,18 +65,14 @@ class HeroAircraft {
     - shootNum:int
     - power:int
     - direction:int
-    - HeroAircraft(int locationX, int locationY, int speedX, int speedY, int hp)
+
+    + HeroAircraft(int locationX, int locationY, int speedX, int speedY, int hp)
     + {static} getHeroAircraft(int locationX, int locationY, int speedX, int speedY, int hp):HeroAircraft
     + forward():void
     + shoot():List<BaseBullet>
-    + increaseHp(int hp):void
 }
-HeroAircraft ..> HeroAircraft : «create singleton»
 
-'=================== 敌机工厂（工厂模式） ===================
-class AircraftFactory {
-    + {static} createAircraft(int type, int locationX, int locationY):AbstractAircraft
-}
+HeroAircraft <|.. HeroAircraft
 
 '=================== 敌机具体类 ===================
 class MobEnemy {
@@ -88,14 +87,14 @@ class EliteEnemy {
     + shoot():List<BaseBullet>
 }
 
-class ElitePlusEnemy {
-    + ElitePlusEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
+class EliteProEnemy {
+    + EliteProEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
     + forward():void
     + shoot():List<BaseBullet>
 }
 
-class EliteProEnemy {
-    + EliteProEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
+class ElitePlusEnemy {
+    + ElitePlusEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
     + forward():void
     + shoot():List<BaseBullet>
 }
@@ -106,12 +105,6 @@ class BossEnemy {
     + shoot():List<BaseBullet>
 }
 
-AircraftFactory ..> MobEnemy : «create»
-AircraftFactory ..> EliteEnemy : «create»
-AircraftFactory ..> ElitePlusEnemy : «create»
-AircraftFactory ..> EliteProEnemy : «create»
-AircraftFactory ..> BossEnemy : «create»
-
 '=================== 子弹具体类 ===================
 class HeroBullet {
     + HeroBullet(int locationX, int locationY, int speedX, int speedY, int power)
@@ -121,45 +114,31 @@ class EnemyBullet {
     + EnemyBullet(int locationX, int locationY, int speedX, int speedY, int power)
 }
 
-BaseBullet <|-- HeroBullet
-BaseBullet <|-- EnemyBullet
-
-'=================== 道具工厂（简单工厂模式） ===================
-class PropFactory {
-    + {static} createProp(int type, int locationX, int locationY):AbstractProp
-}
-
 '=================== 道具具体类 ===================
-class FireProp {
-    + FireProp(int locationX, int locationY, int speedX, int speedY, int power)
-    + effect():void
-}
-
-class SuperFireProp {
-    + SuperFireProp(int locationX, int locationY, int speedX, int speedY, int power)
-    + effect():void
+class BloodProp {
+    + BloodProp(int locationX, int locationY, int speedX, int speedY)
+    + effect(Object aircraft):void
 }
 
 class BombProp {
-    + BombProp(int locationX, int locationY, int speedX, int speedY, int power)
-    + effect():void
+    + BombProp(int locationX, int locationY, int speedX, int speedY)
+    + effect(Object aircraft):void
 }
 
-class HealProp {
-    + HealProp(int locationX, int locationY, int speedX, int speedY, int power)
-    + effect():void
+class BulletProp {
+    + BulletProp(int locationX, int locationY, int speedX, int speedY)
+    + effect(Object aircraft):void
+}
+
+class BulletPlusProp {
+    + BulletPlusProp(int locationX, int locationY, int speedX, int speedY)
+    + effect(Object aircraft):void
 }
 
 class FreezeProp {
-    + FreezeProp(int locationX, int locationY, int speedX, int speedY, int power)
-    + effect():void
+    + FreezeProp(int locationX, int locationY, int speedX, int speedY)
+    + effect(Object aircraft):void
 }
-
-PropFactory ..> FireProp : «create»
-PropFactory ..> SuperFireProp : «create»
-PropFactory ..> BombProp : «create»
-PropFactory ..> HealProp : «create»
-PropFactory ..> FreezeProp : «create»
 
 '=================== 继承关系 ===================
 AbstractFlyingObject <|-- AbstractAircraft
@@ -167,16 +146,21 @@ AbstractFlyingObject <|-- BaseBullet
 AbstractFlyingObject <|-- AbstractProp
 
 AbstractAircraft <|-- HeroAircraft
-AbstractAircraft <|-- MobEnemy
-AbstractAircraft <|-- EliteEnemy
-AbstractAircraft <|-- ElitePlusEnemy
-AbstractAircraft <|-- EliteProEnemy
-AbstractAircraft <|-- BossEnemy
+AbstractAircraft <|-- AbstractEnemy
 
-AbstractProp <|-- FireProp
-AbstractProp <|-- SuperFireProp
+AbstractEnemy <|-- MobEnemy
+AbstractEnemy <|-- EliteEnemy
+AbstractEnemy <|-- EliteProEnemy
+AbstractEnemy <|-- ElitePlusEnemy
+AbstractEnemy <|-- BossEnemy
+
+BaseBullet <|-- HeroBullet
+BaseBullet <|-- EnemyBullet
+
+AbstractProp <|-- BloodProp
 AbstractProp <|-- BombProp
-AbstractProp <|-- HealProp
+AbstractProp <|-- BulletProp
+AbstractProp <|-- BulletPlusProp
 AbstractProp <|-- FreezeProp
 
 @enduml
