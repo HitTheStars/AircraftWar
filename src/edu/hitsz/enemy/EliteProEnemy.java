@@ -8,8 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * 强化精英敌机
- * 可射击、更高生命值、可能掉落道具
+ * 王牌敌机
+ * 可左右移动、扇形散射3颗子弹、掉落道具
  * @author hitsz
  */
 public class EliteProEnemy extends AbstractEnemy {
@@ -31,10 +31,14 @@ public class EliteProEnemy extends AbstractEnemy {
         List<BaseBullet> res = new LinkedList<>();
         int x = this.getLocationX();
         int y = this.getLocationY() + 2;
-        int speedX = 0;
         int speedY = this.getSpeedY() + 6;
         int power = 40;
-        res.add(new EnemyBullet(x, y, speedX, speedY, power));
+
+        // 扇形散射3颗子弹 - 左、中、右
+        res.add(new EnemyBullet(x - 20, y, -2, speedY, power));  // 左侧子弹，向左偏移
+        res.add(new EnemyBullet(x, y, 0, speedY, power));         // 中间子弹，直射
+        res.add(new EnemyBullet(x + 20, y, 2, speedY, power));   // 右侧子弹，向右偏移
+
         return res;
     }
 

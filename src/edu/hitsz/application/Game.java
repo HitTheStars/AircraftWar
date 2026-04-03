@@ -3,7 +3,7 @@ package edu.hitsz.application;
 import edu.hitsz.aircraft.*;
 import edu.hitsz.bullet.BaseBullet;
 import edu.hitsz.basic.AbstractFlyingObject;
-import edu.hitsz.enemy.EliteEnemy;
+import edu.hitsz.enemy.*;
 import edu.hitsz.prop.AbstractProp;
 import edu.hitsz.prop.PropFactory;
 
@@ -55,8 +55,14 @@ public class Game extends JPanel {
     //游戏结束标志
     private boolean gameOverFlag = false;
 
+    // 敌机工厂
+    private final EnemyFactory mobEnemyFactory;
+    private final EnemyFactory eliteEnemyFactory;
+    private final EnemyFactory elitePlusEnemyFactory;
+    private final EnemyFactory eliteProEnemyFactory;
+
     public Game() {
-        heroAircraft =HeroAircraft.getHeroAircraft(
+        heroAircraft = HeroAircraft.getHeroAircraft(
                 Main.WINDOW_WIDTH / 2,
                 Main.WINDOW_HEIGHT - ImageManager.HERO_IMAGE.getHeight() ,
                 0, 0, 100);
@@ -65,6 +71,12 @@ public class Game extends JPanel {
         heroBullets = new LinkedList<>();
         enemyBullets = new LinkedList<>();
         props = new LinkedList<>();
+
+        // 初始化敌机工厂
+        mobEnemyFactory = new MobEnemyFactory();
+        eliteEnemyFactory = new EliteEnemyFactory();
+        elitePlusEnemyFactory = new ElitePlusEnemyFactory();
+        eliteProEnemyFactory = new EliteProEnemyFactory();
 
         //启动英雄机鼠标监听
         new HeroController(this, heroAircraft);
@@ -84,30 +96,54 @@ public class Game extends JPanel {
             public void run() {
 
                 enemySpawnCounter++;
-                if (enemySpawnCounter >=enemySpawnCycle) {
+                if (enemySpawnCounter >= enemySpawnCycle) {
                     enemySpawnCounter = 0;
                     // 产生敌机
                     if (enemyAircrafts.size() < enemyMaxNumber) {
-                        // 随机产生普通敌机或精英敌机
-                        if (Math.random() < 0.5) {
-                            // 产生普通敌机
-                            enemyAircrafts.add(new MobEnemy(
-                                    (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.MOB_ENEMY_IMAGE.getWidth())),
-                                    (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05),
-                                    0,
-                                    10,
-                                    30
-                            ));
+                        // 随机生成4种敌机（Boss除外）
+                        double rand = Math.random();
+                        EnemyFactory factory;
+                        int locationX;
+                        int locationY;
+                        int speedX;
+                        int speedY;
+                        int hp;
+                        
+                        if (rand < 0.4) {
+                            // 40%概率产生普通敌机
+                            factory = mobEnemyFactory;
+                            locationX = (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.MOB_ENEMY_IMAGE.getWidth()));
+                            locationY = (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05);
+                            speedX = 0;
+                            speedY = 10;
+                            hp = 30;
+                        } else if (rand < 0.7) {
+                            // 30%概率产生精英敌机
+                            factory = eliteEnemyFactory;
+                            locationX = (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_ENEMY_IMAGE.getWidth()));
+                            locationY = (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05);
+                            speedX = 0;
+                            speedY = 10;
+                            hp = 60;
+                        } else if (rand < 0.85) {
+                            // 15%概率产生精锐敌机 - 可左右移动
+                            factory = elitePlusEnemyFactory;
+                            locationX = (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_PLUS_ENEMY_IMAGE.getWidth()));
+                            locationY = (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05);
+                            speedX = (Math.random() > 0.5) ? 3 : -3; // 随机向左或向右
+                            speedY = 10;
+                            hp = 80;
                         } else {
-                            // 产生精英敌机
-                            enemyAircrafts.add(new EliteEnemy(
-                                    (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_ENEMY_IMAGE.getWidth())),
-                                    (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05),
-                                    0,
-                                    10,
-                                    60
-                            ));
+                            // 15%概率产生王牌敌机 - 可左右移动
+                            factory = eliteProEnemyFactory;
+                            locationX = (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_PRO_ENEMY_IMAGE.getWidth()));
+                            locationY = (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05);
+                            speedX = (Math.random() > 0.5) ? 4 : -4; // 随机向左或向右，速度更快
+                            speedY = 12;
+                            hp = 100;
                         }
+                        
+                        enemyAircrafts.add(factory.createEnemy(locationX, locationY, speedX, speedY, hp));
                     }
                 }
 
@@ -209,9 +245,13 @@ public class Game extends JPanel {
                     if (enemyAircraft.notValid()) {
                         // 获得分数
                         score += 10;
-                        // 精英敌机可能掉落道具
+                        // 敌机被击毁时按概率掉落道具
                         if (enemyAircraft instanceof EliteEnemy) {
-                            generateProp(enemyAircraft.getLocationX(), enemyAircraft.getLocationY());
+                            generateEliteProp(enemyAircraft.getLocationX(), enemyAircraft.getLocationY());
+                        } else if (enemyAircraft instanceof ElitePlusEnemy) {
+                            generateElitePlusProp(enemyAircraft.getLocationX(), enemyAircraft.getLocationY());
+                        } else if (enemyAircraft instanceof EliteProEnemy) {
+                            generateEliteProProp(enemyAircraft.getLocationX(), enemyAircraft.getLocationY());
                         }
                     }
                 }
@@ -237,10 +277,10 @@ public class Game extends JPanel {
     }
 
     /**
-     * 生成道具
-     * 从精英敌机位置随机掉落一个道具
+     * 生成精英敌机道具
+     * 精英敌机被击毁时掉落道具
      */
-    private void generateProp(int x, int y) {
+    private void generateEliteProp(int x, int y) {
         double rand = Math.random();
         if (rand < 0.4) {
             // 40%概率掉落加血道具
@@ -251,6 +291,51 @@ public class Game extends JPanel {
         } else if (rand < 1.0) {
             // 30%概率掉落超级火力道具
             props.add(PropFactory.getProp("BulletPlusProp", x, y, 0, 5));
+        }
+    }
+
+    /**
+     * 生成精锐敌机道具
+     * 精锐敌机可掉落4种道具（不含冰冻）
+     */
+    private void generateElitePlusProp(int x, int y) {
+        double rand = Math.random();
+        if (rand < 0.25) {
+            // 25%概率掉落加血道具
+            props.add(PropFactory.getProp("BloodProp", x, y, 0, 5));
+        } else if (rand < 0.5) {
+            // 25%概率掉落火力道具
+            props.add(PropFactory.getProp("BulletProp", x, y, 0, 5));
+        } else if (rand < 0.75) {
+            // 25%概率掉落超级火力道具
+            props.add(PropFactory.getProp("BulletPlusProp", x, y, 0, 5));
+        } else {
+            // 25%概率掉落炸弹道具
+            props.add(PropFactory.getProp("BombProp", x, y, 0, 5));
+        }
+    }
+
+    /**
+     * 生成王牌敌机道具
+     * 王牌敌机可掉落全部5种道具
+     */
+    private void generateEliteProProp(int x, int y) {
+        double rand = Math.random();
+        if (rand < 0.2) {
+            // 20%概率掉落加血道具
+            props.add(PropFactory.getProp("BloodProp", x, y, 0, 5));
+        } else if (rand < 0.4) {
+            // 20%概率掉落火力道具
+            props.add(PropFactory.getProp("BulletProp", x, y, 0, 5));
+        } else if (rand < 0.6) {
+            // 20%概率掉落超级火力道具
+            props.add(PropFactory.getProp("BulletPlusProp", x, y, 0, 5));
+        } else if (rand < 0.8) {
+            // 20%概率掉落炸弹道具
+            props.add(PropFactory.getProp("BombProp", x, y, 0, 5));
+        } else {
+            // 20%概率掉落冰冻道具
+            props.add(PropFactory.getProp("FreezeProp", x, y, 0, 5));
         }
     }
 

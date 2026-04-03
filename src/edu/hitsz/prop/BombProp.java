@@ -13,6 +13,7 @@ public class BombProp extends AbstractProp {
 
     @Override
     public void effect(Object aircraft) {
+        System.out.println("BombSupply active!");
         // 清除所有敌机
     }
 

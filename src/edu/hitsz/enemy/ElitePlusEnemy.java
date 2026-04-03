@@ -8,8 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * 高级精英敌机
- * 可射击、高生命值、可能掉落更多道具
+ * 精锐敌机
+ * 可左右移动、向下直射双排子弹、掉落道具
  * @author hitsz
  */
 public class ElitePlusEnemy extends AbstractEnemy {
@@ -31,10 +31,14 @@ public class ElitePlusEnemy extends AbstractEnemy {
         List<BaseBullet> res = new LinkedList<>();
         int x = this.getLocationX();
         int y = this.getLocationY() + 2;
-        int speedX = 0;
         int speedY = this.getSpeedY() + 7;
         int power = 50;
-        res.add(new EnemyBullet(x, y, speedX, speedY, power));
+        
+        // 双排子弹 - 左右各一发
+        int offset = 20; // 子弹间距
+        res.add(new EnemyBullet(x - offset, y, 0, speedY, power));
+        res.add(new EnemyBullet(x + offset, y, 0, speedY, power));
+        
         return res;
     }
 

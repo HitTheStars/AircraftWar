@@ -13,6 +13,7 @@ public class FreezeProp extends AbstractProp {
 
     @Override
     public void effect(Object aircraft) {
+        System.out.println("FreezeSupply active!");
         // 冻结所有敌机
     }
 
