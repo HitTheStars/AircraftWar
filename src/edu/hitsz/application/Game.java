@@ -5,9 +5,7 @@ import edu.hitsz.bullet.BaseBullet;
 import edu.hitsz.basic.AbstractFlyingObject;
 import edu.hitsz.enemy.EliteEnemy;
 import edu.hitsz.prop.AbstractProp;
-import edu.hitsz.prop.BloodProp;
-import edu.hitsz.prop.BulletProp;
-import edu.hitsz.prop.BulletPlusProp;
+import edu.hitsz.prop.PropFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -246,13 +244,13 @@ public class Game extends JPanel {
         double rand = Math.random();
         if (rand < 0.4) {
             // 40%概率掉落加血道具
-            props.add(new BloodProp(x, y, 0, 5));
+            props.add(PropFactory.getProp("BloodProp", x, y, 0, 5));
         } else if (rand < 0.7) {
             // 30%概率掉落火力道具
-            props.add(new BulletProp(x, y, 0, 5));
+            props.add(PropFactory.getProp("BulletProp", x, y, 0, 5));
         } else if (rand < 1.0) {
             // 30%概率掉落超级火力道具
-            props.add(new BulletPlusProp(x, y, 0, 5));
+            props.add(PropFactory.getProp("BulletPlusProp", x, y, 0, 5));
         }
     }
 

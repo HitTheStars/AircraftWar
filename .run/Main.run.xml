@@ -7,7 +7,7 @@
       <env name="_JAVA_AWT_WM_NONREPARENTING" value="1" />
     </envs>
     <option name="MAIN_CLASS_NAME" value="edu.hitsz.application.Main" />
-    <module name="AircraftWar-base1.0" />
+    <module name="AircraftWar-base" />
     <option name="VM_PARAMETERS" value="-Dsun.java2d.opengl=false -Dsun.java2d.xrender=false -Dawt.useSystemAAFontSettings=on" />
     <extension name="coverage">
       <pattern>

@@ -37,7 +37,7 @@ abstract class AbstractAircraft {
     + {abstract} shoot():List<BaseBullet>
 }
 
-'=================== 敌机基类 ===================
+'=================== 敌机基类（工厂方法模式-产品） ===================
 abstract class AbstractEnemy {
     + AbstractEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
     + {abstract} shoot():List<BaseBullet>
@@ -52,11 +52,41 @@ abstract class BaseBullet {
     + getPower():int
 }
 
-'=================== 道具基类 ===================
+'=================== 道具产品接口（简单工厂模式） ===================
+interface PropProduct {
+    + effect(Object aircraft):void
+}
+
+'=================== 道具抽象类 ===================
 abstract class AbstractProp {
     + AbstractProp(int locationX, int locationY, int speedX, int speedY)
-    + forward():void
     + {abstract} effect(Object aircraft):void
+}
+
+'=================== 道具具体类 ===================
+class BloodProp {
+    + BloodProp(int locationX, int locationY, int speedX, int speedY)
+    + effect(Object aircraft):void
+}
+
+class BombProp {
+    + BombProp(int locationX, int locationY, int speedX, int speedY)
+    + effect(Object aircraft):void
+}
+
+class BulletProp {
+    + BulletProp(int locationX, int locationY, int speedX, int speedY)
+    + effect(Object aircraft):void
+}
+
+class BulletPlusProp {
+    + BulletPlusProp(int locationX, int locationY, int speedX, int speedY)
+    + effect(Object aircraft):void
+}
+
+class FreezeProp {
+    + FreezeProp(int locationX, int locationY, int speedX, int speedY)
+    + effect(Object aircraft):void
 }
 
 '=================== 英雄机（单例模式） ===================
@@ -74,7 +104,7 @@ class HeroAircraft {
 
 HeroAircraft <|.. HeroAircraft
 
-'=================== 敌机具体类 ===================
+'=================== 敌机具体类（工厂方法模式-具体产品） ===================
 class MobEnemy {
     + MobEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
     + forward():void
@@ -114,37 +144,65 @@ class EnemyBullet {
     + EnemyBullet(int locationX, int locationY, int speedX, int speedY, int power)
 }
 
-'=================== 道具具体类 ===================
-class BloodProp {
-    + BloodProp(int locationX, int locationY, int speedX, int speedY)
-    + effect(Object aircraft):void
+'=================== 道具工厂（简单工厂模式） ===================
+class PropFactory {
+    + {static} getProp(String propName, int locationX, int locationY, int speedX, int speedY):AbstractProp
 }
 
-class BombProp {
-    + BombProp(int locationX, int locationY, int speedX, int speedY)
-    + effect(Object aircraft):void
+PropProduct <|.. AbstractProp
+AbstractProp <|-- BloodProp
+AbstractProp <|-- BombProp
+AbstractProp <|-- BulletProp
+AbstractProp <|-- BulletPlusProp
+AbstractProp <|-- FreezeProp
+
+PropFactory ..> BloodProp : creates
+PropFactory ..> BombProp : creates
+PropFactory ..> BulletProp : creates
+PropFactory ..> BulletPlusProp : creates
+PropFactory ..> FreezeProp : creates
+
+'=================== 敌机工厂（工厂方法模式） ===================
+interface EnemyFactory {
+    + createEnemy(int locationX, int locationY, int speedX, int speedY, int hp):AbstractEnemy
 }
 
-class BulletProp {
-    + BulletProp(int locationX, int locationY, int speedX, int speedY)
-    + effect(Object aircraft):void
+class MobEnemyFactory {
+    + createEnemy(int locationX, int locationY, int speedX, int speedY, int hp):AbstractEnemy
 }
 
-class BulletPlusProp {
-    + BulletPlusProp(int locationX, int locationY, int speedX, int speedY)
-    + effect(Object aircraft):void
+class EliteEnemyFactory {
+    + createEnemy(int locationX, int locationY, int speedX, int speedY, int hp):AbstractEnemy
 }
 
-class FreezeProp {
-    + FreezeProp(int locationX, int locationY, int speedX, int speedY)
-    + effect(Object aircraft):void
+class EliteProEnemyFactory {
+    + createEnemy(int locationX, int locationY, int speedX, int speedY, int hp):AbstractEnemy
 }
+
+class ElitePlusEnemyFactory {
+    + createEnemy(int locationX, int locationY, int speedX, int speedY, int hp):AbstractEnemy
+}
+
+class BossEnemyFactory {
+    + createEnemy(int locationX, int locationY, int speedX, int speedY, int hp):AbstractEnemy
+}
+
+EnemyFactory <|.. MobEnemyFactory
+EnemyFactory <|.. EliteEnemyFactory
+EnemyFactory <|.. EliteProEnemyFactory
+EnemyFactory <|.. ElitePlusEnemyFactory
+EnemyFactory <|.. BossEnemyFactory
+
+MobEnemyFactory ..> MobEnemy : creates
+EliteEnemyFactory ..> EliteEnemy : creates
+EliteProEnemyFactory ..> EliteProEnemy : creates
+ElitePlusEnemyFactory ..> ElitePlusEnemy : creates
+BossEnemyFactory ..> BossEnemy : creates
 
 '=================== 继承关系 ===================
 AbstractFlyingObject <|-- AbstractAircraft
 AbstractFlyingObject <|-- BaseBullet
 AbstractFlyingObject <|-- AbstractProp
-
 AbstractAircraft <|-- HeroAircraft
 AbstractAircraft <|-- AbstractEnemy
 
@@ -156,11 +214,5 @@ AbstractEnemy <|-- BossEnemy
 
 BaseBullet <|-- HeroBullet
 BaseBullet <|-- EnemyBullet
-
-AbstractProp <|-- BloodProp
-AbstractProp <|-- BombProp
-AbstractProp <|-- BulletProp
-AbstractProp <|-- BulletPlusProp
-AbstractProp <|-- FreezeProp
 
 @enduml
