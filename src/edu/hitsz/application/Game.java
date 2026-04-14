@@ -47,7 +47,7 @@ public class Game extends JPanel {
     private int shootCounter = 0;
 
     //英雄机射击周期
-    protected double heroShootCycle = 5;
+    protected double heroShootCycle = 10;
     private int heroShootCounter = 0;
 
     //当前玩家分数
@@ -147,7 +147,7 @@ public class Game extends JPanel {
                             (int) (Main.WINDOW_HEIGHT * 0.1),
                             5,
                             0,
-                            200
+                            500
                     ));
                     hasBoss = true;
                 }
@@ -226,7 +226,7 @@ public class Game extends JPanel {
                 continue;
             }
             if (bullet.crash(heroAircraft) || heroAircraft.crash(bullet)) {
-                heroAircraft.decreaseHp(bullet.getPower() / 2);
+                heroAircraft.decreaseHp(bullet.getPower());
                 bullet.vanish();
             }
         }
@@ -263,10 +263,10 @@ public class Game extends JPanel {
                         }
                     }
                 }
-                // 英雄机 与 敌机 相撞
+                // 英雄机 与 敌机 相撞，均损毁
                 if (enemyAircraft.crash(heroAircraft) || heroAircraft.crash(enemyAircraft)) {
                     enemyAircraft.vanish();
-                    heroAircraft.decreaseHp(50);
+                    heroAircraft.decreaseHp(Integer.MAX_VALUE);
                 }
             }
         }
