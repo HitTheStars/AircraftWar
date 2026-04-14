@@ -14,6 +14,7 @@ import java.util.*;
 import java.util.List;
 import java.util.Timer;
 import java.util.concurrent.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * 游戏主面板，游戏启动
@@ -46,20 +47,23 @@ public class Game extends JPanel {
     private int shootCounter = 0;
 
     //英雄机射击周期
-    protected double heroShootCycle = 10;
+    protected double heroShootCycle = 5;
     private int heroShootCounter = 0;
 
     //当前玩家分数
     private int score = 0;
 
+    //Boss生成标志
+    private boolean hasBoss = false;
+
+    //自上次Boss死后累计的击杀分数（每10分=1架敌机）
+    private int bossSpawnScoreCounter = 0;
+
+    //Boss生成所需击杀分数
+    private static final int BOSS_SPAWN_NEED_SCORE = 100;
+
     //游戏结束标志
     private boolean gameOverFlag = false;
-
-    // 敌机工厂
-    private final EnemyFactory mobEnemyFactory;
-    private final EnemyFactory eliteEnemyFactory;
-    private final EnemyFactory elitePlusEnemyFactory;
-    private final EnemyFactory eliteProEnemyFactory;
 
     public Game() {
         heroAircraft = HeroAircraft.getHeroAircraft(
@@ -67,16 +71,10 @@ public class Game extends JPanel {
                 Main.WINDOW_HEIGHT - ImageManager.HERO_IMAGE.getHeight() ,
                 0, 0, 100);
 
-        enemyAircrafts = new LinkedList<>();
-        heroBullets = new LinkedList<>();
-        enemyBullets = new LinkedList<>();
-        props = new LinkedList<>();
-
-        // 初始化敌机工厂
-        mobEnemyFactory = new MobEnemyFactory();
-        eliteEnemyFactory = new EliteEnemyFactory();
-        elitePlusEnemyFactory = new ElitePlusEnemyFactory();
-        eliteProEnemyFactory = new EliteProEnemyFactory();
+        enemyAircrafts = new CopyOnWriteArrayList<>();
+        heroBullets = new CopyOnWriteArrayList<>();
+        enemyBullets = new CopyOnWriteArrayList<>();
+        props = new CopyOnWriteArrayList<>();
 
         //启动英雄机鼠标监听
         new HeroController(this, heroAircraft);
@@ -100,51 +98,58 @@ public class Game extends JPanel {
                     enemySpawnCounter = 0;
                     // 产生敌机
                     if (enemyAircrafts.size() < enemyMaxNumber) {
-                        // 随机生成4种敌机（Boss除外）
                         double rand = Math.random();
-                        EnemyFactory factory;
-                        int locationX;
-                        int locationY;
-                        int speedX;
-                        int speedY;
-                        int hp;
-                        
                         if (rand < 0.4) {
                             // 40%概率产生普通敌机
-                            factory = mobEnemyFactory;
-                            locationX = (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.MOB_ENEMY_IMAGE.getWidth()));
-                            locationY = (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05);
-                            speedX = 0;
-                            speedY = 10;
-                            hp = 30;
+                            enemyAircrafts.add(new MobEnemy(
+                                    (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.MOB_ENEMY_IMAGE.getWidth())),
+                                    (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05),
+                                    0,
+                                    10,
+                                    30
+                            ));
                         } else if (rand < 0.7) {
                             // 30%概率产生精英敌机
-                            factory = eliteEnemyFactory;
-                            locationX = (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_ENEMY_IMAGE.getWidth()));
-                            locationY = (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05);
-                            speedX = 0;
-                            speedY = 10;
-                            hp = 60;
+                            enemyAircrafts.add(new EliteEnemy(
+                                    (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_ENEMY_IMAGE.getWidth())),
+                                    (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05),
+                                    0,
+                                    10,
+                                    60
+                            ));
                         } else if (rand < 0.85) {
-                            // 15%概率产生精锐敌机 - 可左右移动
-                            factory = elitePlusEnemyFactory;
-                            locationX = (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_PLUS_ENEMY_IMAGE.getWidth()));
-                            locationY = (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05);
-                            speedX = (Math.random() > 0.5) ? 3 : -3; // 随机向左或向右
-                            speedY = 10;
-                            hp = 80;
+                            // 15%概率产生精锐敌机
+                            enemyAircrafts.add(new EliteProEnemy(
+                                    (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_PRO_ENEMY_IMAGE.getWidth())),
+                                    (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05),
+                                    0,
+                                    10,
+                                    80
+                            ));
                         } else {
-                            // 15%概率产生王牌敌机 - 可左右移动
-                            factory = eliteProEnemyFactory;
-                            locationX = (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_PRO_ENEMY_IMAGE.getWidth()));
-                            locationY = (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05);
-                            speedX = (Math.random() > 0.5) ? 4 : -4; // 随机向左或向右，速度更快
-                            speedY = 12;
-                            hp = 100;
+                            // 15%概率产生王牌敌机
+                            enemyAircrafts.add(new ElitePlusEnemy(
+                                    (int) (Math.random() * (Main.WINDOW_WIDTH - ImageManager.ELITE_PLUS_ENEMY_IMAGE.getWidth())),
+                                    (int) (Math.random() * Main.WINDOW_HEIGHT * 0.05),
+                                    0,
+                                    10,
+                                    100
+                            ));
                         }
-                        
-                        enemyAircrafts.add(factory.createEnemy(locationX, locationY, speedX, speedY, hp));
                     }
+                }
+
+                // Boss敌机生成
+                if (bossSpawnScoreCounter >= BOSS_SPAWN_NEED_SCORE && !hasBoss) {
+                    System.out.println("Boss spawning!");
+                    enemyAircrafts.add(new BossEnemy(
+                            Main.WINDOW_WIDTH / 2,
+                            (int) (Main.WINDOW_HEIGHT * 0.1),
+                            5,
+                            0,
+                            200
+                    ));
+                    hasBoss = true;
                 }
 
                 // 飞机发射子弹
@@ -221,7 +226,7 @@ public class Game extends JPanel {
                 continue;
             }
             if (bullet.crash(heroAircraft) || heroAircraft.crash(bullet)) {
-                heroAircraft.decreaseHp(bullet.getPower());
+                heroAircraft.decreaseHp(bullet.getPower() / 2);
                 bullet.vanish();
             }
         }
@@ -245,20 +250,23 @@ public class Game extends JPanel {
                     if (enemyAircraft.notValid()) {
                         // 获得分数
                         score += 10;
-                        // 敌机被击毁时按概率掉落道具
-                        if (enemyAircraft instanceof EliteEnemy) {
-                            generateEliteProp(enemyAircraft.getLocationX(), enemyAircraft.getLocationY());
-                        } else if (enemyAircraft instanceof ElitePlusEnemy) {
-                            generateElitePlusProp(enemyAircraft.getLocationX(), enemyAircraft.getLocationY());
-                        } else if (enemyAircraft instanceof EliteProEnemy) {
-                            generateEliteProProp(enemyAircraft.getLocationX(), enemyAircraft.getLocationY());
+                        // 道具掉落
+                        if (enemyAircraft instanceof BossEnemy) {
+                            for (int i = 0; i < 3; i++) {
+                                generateProp(enemyAircraft.getLocationX(), enemyAircraft.getLocationY());
+                            }
+                        } else {
+                            bossSpawnScoreCounter += 10;
+                            if (!(enemyAircraft instanceof MobEnemy)) {
+                                generateProp(enemyAircraft.getLocationX(), enemyAircraft.getLocationY());
+                            }
                         }
                     }
                 }
-                // 英雄机 与 敌机 相撞，均损毁
+                // 英雄机 与 敌机 相撞
                 if (enemyAircraft.crash(heroAircraft) || heroAircraft.crash(enemyAircraft)) {
                     enemyAircraft.vanish();
-                    heroAircraft.decreaseHp(Integer.MAX_VALUE);
+                    heroAircraft.decreaseHp(50);
                 }
             }
         }
@@ -277,49 +285,10 @@ public class Game extends JPanel {
     }
 
     /**
-     * 生成精英敌机道具
-     * 精英敌机被击毁时掉落道具
+     * 生成道具
+     * 从敌机位置随机掉落一个道具
      */
-    private void generateEliteProp(int x, int y) {
-        double rand = Math.random();
-        if (rand < 0.4) {
-            // 40%概率掉落加血道具
-            props.add(PropFactory.getProp("BloodProp", x, y, 0, 5));
-        } else if (rand < 0.7) {
-            // 30%概率掉落火力道具
-            props.add(PropFactory.getProp("BulletProp", x, y, 0, 5));
-        } else if (rand < 1.0) {
-            // 30%概率掉落超级火力道具
-            props.add(PropFactory.getProp("BulletPlusProp", x, y, 0, 5));
-        }
-    }
-
-    /**
-     * 生成精锐敌机道具
-     * 精锐敌机可掉落4种道具（不含冰冻）
-     */
-    private void generateElitePlusProp(int x, int y) {
-        double rand = Math.random();
-        if (rand < 0.25) {
-            // 25%概率掉落加血道具
-            props.add(PropFactory.getProp("BloodProp", x, y, 0, 5));
-        } else if (rand < 0.5) {
-            // 25%概率掉落火力道具
-            props.add(PropFactory.getProp("BulletProp", x, y, 0, 5));
-        } else if (rand < 0.75) {
-            // 25%概率掉落超级火力道具
-            props.add(PropFactory.getProp("BulletPlusProp", x, y, 0, 5));
-        } else {
-            // 25%概率掉落炸弹道具
-            props.add(PropFactory.getProp("BombProp", x, y, 0, 5));
-        }
-    }
-
-    /**
-     * 生成王牌敌机道具
-     * 王牌敌机可掉落全部5种道具
-     */
-    private void generateEliteProProp(int x, int y) {
+    private void generateProp(int x, int y) {
         double rand = Math.random();
         if (rand < 0.2) {
             // 20%概率掉落加血道具
@@ -352,6 +321,19 @@ public class Game extends JPanel {
         props.removeIf(AbstractFlyingObject::notValid);
         // 移除出界的道具
         props.removeIf(prop -> prop.getLocationY() > Main.WINDOW_HEIGHT);
+
+        // 检查Boss是否已被清除
+        boolean bossAlive = false;
+        for (AbstractAircraft enemy : enemyAircrafts) {
+            if (enemy instanceof BossEnemy) {
+                bossAlive = true;
+                break;
+            }
+        }
+        if (hasBoss && !bossAlive) {
+            hasBoss = false;
+            bossSpawnScoreCounter = 0;
+        }
     }
 
     /**

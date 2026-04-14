@@ -2,7 +2,6 @@ package edu.hitsz.prop;
 
 /**
  * 爆炸道具
- * 清除屏幕上所有敌机
  * @author hitsz
  */
 public class BombProp extends AbstractProp {
@@ -14,7 +13,6 @@ public class BombProp extends AbstractProp {
     @Override
     public void effect(Object aircraft) {
         System.out.println("BombSupply active!");
-        // 清除所有敌机
     }
 
 }

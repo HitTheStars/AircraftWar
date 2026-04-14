@@ -1,11 +1,7 @@
 package edu.hitsz.enemy;
 
 import edu.hitsz.application.Main;
-import edu.hitsz.bullet.BaseBullet;
-import edu.hitsz.bullet.EnemyBullet;
-
-import java.util.LinkedList;
-import java.util.List;
+import edu.hitsz.shoot.DirectShootStrategy;
 
 /**
  * 精英敌机
@@ -16,6 +12,10 @@ public class EliteEnemy extends AbstractEnemy {
 
     public EliteEnemy(int locationX, int locationY, int speedX, int speedY, int hp) {
         super(locationX, locationY, speedX, speedY, hp);
+        this.shootNum = 1;
+        this.power = 30;
+        this.direction = 1;
+        this.shootStrategy = new DirectShootStrategy();
     }
 
     @Override
@@ -24,18 +24,6 @@ public class EliteEnemy extends AbstractEnemy {
         if (locationY >= Main.WINDOW_HEIGHT) {
             vanish();
         }
-    }
-
-    @Override
-    public List<BaseBullet> shoot() {
-        List<BaseBullet> res = new LinkedList<>();
-        int x = this.getLocationX();
-        int y = this.getLocationY() + 2;
-        int speedX = 0;
-        int speedY = this.getSpeedY() + 5;
-        int power = 30;
-        res.add(new EnemyBullet(x, y, speedX, speedY, power));
-        return res;
     }
 
 }

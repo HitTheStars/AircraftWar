@@ -1,21 +1,21 @@
 package edu.hitsz.enemy;
 
 import edu.hitsz.application.Main;
-import edu.hitsz.bullet.BaseBullet;
-import edu.hitsz.bullet.EnemyBullet;
-
-import java.util.LinkedList;
-import java.util.List;
+import edu.hitsz.shoot.RingShootStrategy;
 
 /**
  * Boss敌机
- * 高生命值、多种射击模式、必定掉落道具
+ * 高生命值、环射攻击、必定掉落道具
  * @author hitsz
  */
 public class BossEnemy extends AbstractEnemy {
 
     public BossEnemy(int locationX, int locationY, int speedX, int speedY, int hp) {
         super(locationX, locationY, speedX, speedY, hp);
+        this.shootNum = 20;
+        this.power = 60;
+        this.direction = 1;
+        this.shootStrategy = new RingShootStrategy();
     }
 
     @Override
@@ -24,22 +24,6 @@ public class BossEnemy extends AbstractEnemy {
         if (locationY >= Main.WINDOW_HEIGHT) {
             vanish();
         }
-    }
-
-    @Override
-    public List<BaseBullet> shoot() {
-        List<BaseBullet> res = new LinkedList<>();
-        int x = this.getLocationX();
-        int y = this.getLocationY() + 2;
-        int speedY = this.getSpeedY() + 8;
-        int power = 60;
-
-        // Boss向三个方向发射子弹
-        res.add(new EnemyBullet(x, y, 0, speedY, power));
-        res.add(new EnemyBullet(x - 20, y, -2, speedY, power));
-        res.add(new EnemyBullet(x + 20, y, 2, speedY, power));
-
-        return res;
     }
 
 }

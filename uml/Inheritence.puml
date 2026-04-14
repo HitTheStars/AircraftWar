@@ -26,21 +26,25 @@ abstract class AbstractFlyingObject {
     + vanish():void
 }
 
-'=================== 飞机基类 ===================
+'=================== 飞机基类（策略模式-Context） ===================
 abstract class AbstractAircraft {
     # maxHp:int
     # hp:int
+    # shootNum:int
+    # power:int
+    # direction:int
+    - shootStrategy:ShootStrategy
 
     + AbstractAircraft(int locationX, int locationY, int speedX, int speedY, int hp)
     + decreaseHp(int decrease):void
     + getHp():int
-    + {abstract} shoot():List<BaseBullet>
+    + setShootStrategy(ShootStrategy shootStrategy):void
+    + shoot():List<BaseBullet>
 }
 
 '=================== 敌机基类（工厂方法模式-产品） ===================
 abstract class AbstractEnemy {
     + AbstractEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
-    + {abstract} shoot():List<BaseBullet>
 }
 
 '=================== 子弹基类 ===================
@@ -92,14 +96,10 @@ class FreezeProp {
 '=================== 英雄机（单例模式） ===================
 class HeroAircraft {
     - {static} heroAircraft:HeroAircraft
-    - shootNum:int
-    - power:int
-    - direction:int
 
     + HeroAircraft(int locationX, int locationY, int speedX, int speedY, int hp)
     + {static} getHeroAircraft(int locationX, int locationY, int speedX, int speedY, int hp):HeroAircraft
     + forward():void
-    + shoot():List<BaseBullet>
 }
 
 HeroAircraft <|.. HeroAircraft
@@ -108,31 +108,26 @@ HeroAircraft <|.. HeroAircraft
 class MobEnemy {
     + MobEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
     + forward():void
-    + shoot():List<BaseBullet>
 }
 
 class EliteEnemy {
     + EliteEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
     + forward():void
-    + shoot():List<BaseBullet>
 }
 
 class EliteProEnemy {
     + EliteProEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
     + forward():void
-    + shoot():List<BaseBullet>
 }
 
 class ElitePlusEnemy {
     + ElitePlusEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
     + forward():void
-    + shoot():List<BaseBullet>
 }
 
 class BossEnemy {
     + BossEnemy(int locationX, int locationY, int speedX, int speedY, int hp)
     + forward():void
-    + shoot():List<BaseBullet>
 }
 
 '=================== 子弹具体类 ===================
@@ -142,6 +137,27 @@ class HeroBullet {
 
 class EnemyBullet {
     + EnemyBullet(int locationX, int locationY, int speedX, int speedY, int power)
+}
+
+'=================== 策略模式：弹道策略 ===================
+interface ShootStrategy {
+    + shoot(AbstractAircraft aircraft):List<BaseBullet>
+}
+
+class DirectShootStrategy {
+    + shoot(AbstractAircraft aircraft):List<BaseBullet>
+}
+
+class ScatterShootStrategy {
+    + shoot(AbstractAircraft aircraft):List<BaseBullet>
+}
+
+class RingShootStrategy {
+    + shoot(AbstractAircraft aircraft):List<BaseBullet>
+}
+
+class NoShootStrategy {
+    + shoot(AbstractAircraft aircraft):List<BaseBullet>
 }
 
 '=================== 道具工厂（简单工厂模式） ===================
@@ -199,6 +215,12 @@ EliteProEnemyFactory ..> EliteProEnemy : creates
 ElitePlusEnemyFactory ..> ElitePlusEnemy : creates
 BossEnemyFactory ..> BossEnemy : creates
 
+'=================== 策略模式实现关系 ===================
+ShootStrategy <|.. DirectShootStrategy
+ShootStrategy <|.. ScatterShootStrategy
+ShootStrategy <|.. RingShootStrategy
+ShootStrategy <|.. NoShootStrategy
+
 '=================== 继承关系 ===================
 AbstractFlyingObject <|-- AbstractAircraft
 AbstractFlyingObject <|-- BaseBullet
@@ -214,5 +236,18 @@ AbstractEnemy <|-- BossEnemy
 
 BaseBullet <|-- HeroBullet
 BaseBullet <|-- EnemyBullet
+
+'=================== 策略模式关联关系 ===================
+AbstractAircraft o--> ShootStrategy
+
+'=================== 各飞机/道具与具体策略的使用关系 ===================
+HeroAircraft ..> DirectShootStrategy : default uses
+MobEnemy ..> NoShootStrategy : uses
+EliteEnemy ..> DirectShootStrategy : uses
+EliteProEnemy ..> DirectShootStrategy : uses
+ElitePlusEnemy ..> ScatterShootStrategy : uses
+BossEnemy ..> RingShootStrategy : uses
+BulletProp ..> ScatterShootStrategy : switches to
+BulletPlusProp ..> RingShootStrategy : switches to
 
 @enduml
